@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, request
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.globals import db, swag
+from app.globals import auth, db, swag
 
 from .model import User, UserSchema
 
@@ -115,7 +115,7 @@ def login():
 
     if user is not None and check_password_hash(user.password, password):
         token_data = {
-            'username': user.username,
+            'user_id': user.id,
             'exp': int(time()) + 3600,
             'nbf': int(time()) - 60
         }
@@ -127,6 +127,23 @@ def login():
         return {'token': token}
 
     return {'error': 'authentication failed'}, HTTPStatus.UNAUTHORIZED
+
+
+@auth.verify_token
+def verify_token(token):
+    try:
+        data = jwt.decode(
+            token,
+            current_app.config['SECRET_KEY'],
+            algorithms=[current_app.config['TOKEN_ALG']])
+    except:  # noqa: E722
+        return False
+    if 'user_id' in data:
+        return db.session.execute(
+                db.select(User).filter_by(id=data['user_id'])
+            ).scalar_one_or_none()
+
+    return False
 
 
 @bp.cli.command('reset-pwd')
