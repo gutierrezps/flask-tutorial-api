@@ -1,0 +1,8 @@
+Flask==2.3.*
+flask-sqlalchemy==3.0.*
+flask-migrate==4.0.*
+flask-marshmallow==0.15.*
+marshmallow-sqlalchemy==0.29.*
+flasgger==0.9.*
+flask-httpauth==4.8.*
+pyjwt==2.7.*
