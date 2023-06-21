@@ -1,5 +1,5 @@
-from flask import Blueprint
-from app.globals import auth
+from flask import Blueprint, request
+from app.globals import auth, db, swag
 
 from .model import Post, PostSchema
 
@@ -21,6 +21,8 @@ def posts():
           items:
             type: object
             properties:
+              id:
+                type: number
               title:
                 type: string
               body:
@@ -30,12 +32,13 @@ def posts():
               created_at:
                 type: string
     """
-    posts = Post.all()
+    posts = db.session.execute(db.select(Post)).scalars()
     return PostSchema(many=True).dump(posts)
 
 
 @bp.route('', methods=['POST'])
 @auth.login_required
+@swag.validate('PostCreate')
 def new_post():
     """Create a new post
     ---
@@ -49,9 +52,25 @@ def new_post():
       - name: Authorization
         in: header
         required: true
-      - name: title
+        example: Bearer ...
+      - name: body
         in: body
         required: true
+        schema:
+          id: PostCreate
+          required:
+            - title
+            - body
+          properties:
+            title:
+              type: string
+              description: Post title
+              minLength: 4
+              maxLength: 128
+            body:
+              type: string
+              description: Post contents
+              minLength: 4
     responses:
       201:
         description: Post created
@@ -71,4 +90,12 @@ def new_post():
       401:
         description: User not logged in
     """
-    return auth.current_user()
+    title = request.json['title']
+    body = request.json['body']
+    post = Post(
+        title=title,
+        body=body,
+        author_id=auth.current_user().id)
+    db.session.add(post)
+    db.session.commit()
+    return PostSchema().dump(post)
