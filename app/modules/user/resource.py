@@ -116,8 +116,8 @@ def login():
     if user is not None and check_password_hash(user.password, password):
         token_data = {
             'user_id': user.id,
-            'exp': int(time()) + 3600,
-            'nbf': int(time()) - 60
+            'exp': int(time()) + 3600,    # expiration time (in seconds)
+            'nbf': int(time()) - 60       # not before (in seconds)
         }
         token = jwt.encode(
             token_data,

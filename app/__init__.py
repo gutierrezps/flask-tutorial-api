@@ -11,7 +11,7 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='dev',
         TOKEN_ALG='HS512',
-        DATABASE=os.path.join(app.instance_path, 'especialistas.sqlite'),
+        DATABASE=os.path.join(app.instance_path, 'blog.sqlite'),
         SWAGGER={
             'title': "Blog"
         }
